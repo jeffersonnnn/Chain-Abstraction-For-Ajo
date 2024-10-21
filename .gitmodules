@@ -3,7 +3,7 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "lib/solidity-examples"]
 	path = lib/solidity-examples
-	url = https://github.com/LayerZero-Labs/solidity-examples
+	url = https://github.com/layerzerolabs/solidity-examples
 	branch = main
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
