@@ -1,3 +1,4 @@
+// src/SavingsGroupPoC.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -7,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract SavingsGroupPoC is NonblockingLzApp {
     IERC20 public stablecoin;
     
-    // Group storage
     struct Group {
         uint256 contributionAmount;
         uint256 cycleLength;
@@ -19,7 +19,6 @@ contract SavingsGroupPoC is NonblockingLzApp {
     mapping(uint256 => Group) public groups;
     uint256 public nextGroupId;
 
-    // Cross-chain message types
     uint16 constant MSG_CONTRIBUTE = 1;
     uint16 constant MSG_PAYOUT = 2;
 
@@ -30,7 +29,6 @@ contract SavingsGroupPoC is NonblockingLzApp {
         stablecoin = IERC20(_stablecoin);
     }
 
-    // Local chain functions
     function createGroup(
         uint256 _contributionAmount,
         uint256 _cycleLength,
@@ -46,33 +44,6 @@ contract SavingsGroupPoC is NonblockingLzApp {
         return groupId;
     }
 
-    function contribute(uint256 _groupId, uint16 _dstChainId) external payable {
-        Group storage group = groups[_groupId];
-        require(group.members[msg.sender], "Not a member");
-        
-        // Transfer stablecoins to this contract
-        stablecoin.transferFrom(msg.sender, address(this), group.contributionAmount);
-
-        // Prepare cross-chain message
-        bytes memory payload = abi.encode(
-            MSG_CONTRIBUTE,
-            _groupId,
-            msg.sender,
-            group.contributionAmount
-        );
-
-        // Send message to destination chain
-        _lzSend(
-            _dstChainId,
-            payload,
-            payable(msg.sender),
-            address(0x0),
-            bytes(""),
-            msg.value
-        );
-    }
-
-    // Cross-chain message handling
     function _nonblockingLzReceive(
         uint16 _srcChainId,
         bytes memory _srcAddress,
@@ -84,11 +55,36 @@ contract SavingsGroupPoC is NonblockingLzApp {
 
         if (messageType == MSG_CONTRIBUTE) {
             // Handle contribution received from another chain
-            // Update local state, trigger events, etc.
-        } else if (messageType == MSG_PAYOUT) {
-            // Handle payout request from another chain
-            stablecoin.transfer(member, amount);
+            Group storage group = groups[groupId];
+            if (!group.members[member] && group.memberCount < group.maxMembers) {
+                group.members[member] = true;
+                group.memberCount++;
+            }
         }
+    }
+
+    function contribute(uint256 _groupId, uint16 _dstChainId) external payable {
+        Group storage group = groups[_groupId];
+        require(group.members[msg.sender], "Not a member");
+        
+        // Transfer stablecoins to this contract
+        stablecoin.transferFrom(msg.sender, address(this), group.contributionAmount);
+
+        bytes memory payload = abi.encode(
+            MSG_CONTRIBUTE,
+            _groupId,
+            msg.sender,
+            group.contributionAmount
+        );
+
+        _lzSend(
+            _dstChainId,
+            payload,
+            payable(msg.sender),
+            address(0x0),
+            bytes(""),
+            msg.value
+        );
     }
 
     // View functions

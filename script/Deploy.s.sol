@@ -10,20 +10,19 @@ contract DeployScript is Script {
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address deployer = vm.addr(deployerPrivateKey);
         vm.startBroadcast(deployerPrivateKey);
 
-        // Deploy to the first chain
+        // Deploy to the current chain
         SavingsGroupPoC savingsGroup = new SavingsGroupPoC(
             getLZEndpoint(),
             getStablecoin()
         );
 
-        // If this is second chain deployment, set up peer
+        // If this is second chain deployment, configure trusted remote
         if (block.chainid == getOptimismChainId()) {
-            savingsGroup.setPeer(
-                getSepoliaEid(),
-                addressToBytes32(getSepoliaDeployment())
-            );
+            bytes memory path = abi.encodePacked(getSepoliaDeployment(), address(savingsGroup));
+            savingsGroup.setTrustedRemote(uint16(getSepoliaEid()), path);
         }
 
         vm.stopBroadcast();
@@ -31,9 +30,9 @@ contract DeployScript is Script {
 
     function getLZEndpoint() internal view returns (address) {
         if (block.chainid == getSepoliaChainId()) {
-            return 0x6edce65403992e310a62460808c4b910d972f10f; // Sepolia
+            return 0x6EDCE65403992e310A62460808c4b910D972f10f; // Sepolia
         } else if (block.chainid == getOptimismChainId()) {
-            return 0x6edce65403992e310a62460808c4b910d972f10f; // Optimism Sepolia
+            return 0x6EDCE65403992e310A62460808c4b910D972f10f; // Optimism Sepolia
         }
         revert("Unsupported chain");
     }
@@ -65,9 +64,5 @@ contract DeployScript is Script {
 
     function getSepoliaDeployment() internal view returns (address) {
         return vm.envAddress("SEPOLIA_DEPLOYMENT");
-    }
-
-    function addressToBytes32(address addr) internal pure returns (bytes32) {
-        return bytes32(uint256(uint160(addr)));
     }
 }
