@@ -3,6 +3,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+dotenv = [".env"]
 remappings = [
     "@layerzerolabs/solidity-examples/=lib/solidity-examples/",
     "@openzeppelin/=lib/openzeppelin-contracts/"

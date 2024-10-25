@@ -1,4 +1,3 @@
-// script/Deploy.s.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -24,6 +23,9 @@ contract DeployScript is Script {
             bytes memory path = abi.encodePacked(getSepoliaDeployment(), address(savingsGroup));
             savingsGroup.setTrustedRemote(uint16(getSepoliaEid()), path);
         }
+
+        // Transfer ownership to the deployer
+        savingsGroup.transferOwnership(deployer);
 
         vm.stopBroadcast();
     }

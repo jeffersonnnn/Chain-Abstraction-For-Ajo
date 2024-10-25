@@ -1,15 +1,14 @@
-// src/SavingsGroupPoC.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@layerzerolabs/solidity-examples/contracts/lzApp/NonblockingLzApp.sol";
+import "./LzAppAdapter.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title SavingsGroupPoC
  * @dev A Proof of Concept contract for Savings Groups utilizing LayerZero for cross-chain interactions.
  */
-contract SavingsGroupPoC is NonblockingLzApp {
+contract SavingsGroupPoC is LzAppAdapter {
     IERC20 public stablecoin;
     
     struct Group {
@@ -30,13 +29,11 @@ contract SavingsGroupPoC is NonblockingLzApp {
      * @notice Constructor for SavingsGroupPoC
      * @param _lzEndpoint Address of the LayerZero endpoint
      * @param _stablecoin Address of the stablecoin ERC20 token
-     * @param _initialOwner Address to be set as the initial owner
      */
     constructor(
         address _lzEndpoint,
-        address _stablecoin,
-        address _initialOwner
-    ) NonblockingLzApp(_lzEndpoint, _initialOwner) {
+        address _stablecoin
+    ) LzAppAdapter(_lzEndpoint) {
         stablecoin = IERC20(_stablecoin);
     }
 
